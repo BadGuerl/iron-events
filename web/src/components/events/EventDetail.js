@@ -1,15 +1,29 @@
-import { Component, Fragment } from 'react';
-import { Redirect, Link } from 'react-router-dom';
+import { Component, Fragment, useEffect, useState } from 'react';
+import { Redirect, Link, useHistory, useParams } from 'react-router-dom';
 import moment from 'moment';
 
 import eventsService from '../../services/events-service';
 
-class EventDetail extends Component {
+function EventDetail() {
 
-  state = {
-    event: null,
-    notFound: false
-  }
+  const history = useHistory();
+  const params = useParams();
+  const [event, setEvent] = useState();
+
+  useEffect(() => { // el return de la funcion es la que hace de render
+    // componentDidMount
+    
+    async function fetchEvent() {
+      try {
+
+      } catch
+    }
+
+    return () => {
+      // componentWillUnmount
+
+    }
+  }, [])
 
   componentDidMount() {
     const { id } = this.props.match.params;

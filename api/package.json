@@ -5,7 +5,7 @@
   "license": "ISC",
   "scripts": {
     "start": "node ./app.js",
-    "dev": "PORT=3001 DEBUG=api:* nodemon ./app.js",
+    "dev": "nodemon ./app.js",
     "seeds": "node ./bin/seeds.js",
     "test": "jest"
   },

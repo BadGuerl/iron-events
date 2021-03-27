@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { Redirect } from 'react-router';
 import eventsService from '../../services/events-service';
 
@@ -71,36 +71,38 @@ const validations = {
   },
 }
 
-class EventForm extends Component {
-  state = {
-    event: {
-      title: '',
-      description: '',
-      image: '',
-      capacity: '',
-      start: '',
-      end: '',
-      latitude: '',
-      longitude: '',
-      tags: ''
-    },
-    errors: {
-      title: validations.title(),
-      description: validations.description(),
-      image: validations.image(),
-      capacity: validations.capacity(),
-      start: validations.start(),
-      end: validations.end(),
-      latitude: validations.latitude(),
-      longitude: validations.longitude()
-    },
-    touch: {},
-    isCreated: false
-  }
+function EventForm() {
+  const [state, setState] = useState(
+    {
+      event: {
+        title: '',
+        description: '',
+        image: '',
+        capacity: '',
+        start: '',
+        end: '',
+        latitude: '',
+        longitude: '',
+        tags: ''
+      },
+      errors: {
+        title: validations.title(),
+        description: validations.description(),
+        image: validations.image(),
+        capacity: validations.capacity(),
+        start: validations.start(),
+        end: validations.end(),
+        latitude: validations.latitude(),
+        longitude: validations.longitude()
+      },
+      touch: {},
+      isCreated: false
+    }
+  )
 
-  handleChange = (event) => {
+  const handleChange = (event) => {
     const { name, value } = event.target;
-    this.setState((state, props) => {
+    setState((state, props) => {
       return {
         event: {
           ...state.event,
@@ -114,9 +116,9 @@ class EventForm extends Component {
     });
   }
 
-  handleBlur = (event) => {
+  const handleBlur = (event) => {
     const { name } = event.target;
-    this.setState((state, props) => ({
+    setState((state, props) => ({
       touch: {
         ...state.touch,
         [name]: true
@@ -124,17 +126,17 @@ class EventForm extends Component {
     }));
   }
 
-  handleSubmit = (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (this.isValid()) {
+    if (isValid()) {
 
-      const eventCreationData = this.state.event;
+      const eventCreationData = state.event;
       eventCreationData.location = [eventCreationData.longitude, eventCreationData.latitude];
       eventCreationData.tags = eventCreationData?.tags.split(',').map(tag => tag.trim()) || [];
 
       eventsService.create(eventCreationData)
-        .then(event => this.setState({ isCreated: true }))
+        .then(event => setState({ isCreated: true }))
         .catch(error => {
           const { message, errors } = error.response?.data || { message: error.message };
 
@@ -144,7 +146,7 @@ class EventForm extends Component {
             delete errors.location;
           }
 
-          this.setState({
+          setState({
             errors: {
               ...errors,
               title: !errors && message
@@ -158,98 +160,95 @@ class EventForm extends Component {
     }
   }
 
-  isValid = () => {
-    const { errors } = this.state;
+  const isValid = () => {
+    const { errors } = state;
     return !Object.keys(errors).some(error => errors[error]);
   }
+  const { event, errors, touch, isCreated } = state;
 
-  render() {
-    const { event, errors, touch, isCreated } = this.state;
-
-    if (isCreated) {
-      return (<Redirect to="/" />)
-    }
-
-    return (
-      <div className="row row-cols-1">
-        <div className="col text-center mb-2">
-          <img className="img-fluid img-thumbnail" src={event.image} alt={event.title} onError={(event) => event.target.src = 'https://via.placeholder.com/800x400'} />
-        </div>
-        <div className="col">
-          <form onSubmit={this.handleSubmit}>
-            
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-tag fa-fw"></i></span>
-              <input type="text" name="title" className={`form-control ${(touch.title && errors.title) ? 'is-invalid' : ''}`} placeholder="Event title..."
-                value={event.title} onBlur={this.handleBlur} onChange={this.handleChange} />
-              <div className="invalid-feedback">{errors.title}</div>
-            </div>
-            
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-edit fa-fw"></i></span>
-              <textarea name="description" className={`form-control ${(touch.description && errors.description) ? 'is-invalid' : ''}`} placeholder="Event description..."
-                value={event.description} onBlur={this.handleBlur} onChange={this.handleChange}></textarea>
-              <div className="invalid-feedback">{errors.description}</div>
-            </div>
-            
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-users fa-fw"></i></span>
-              <input type="number" name="capacity" className={`form-control ${(touch.capacity && errors.capacity) ? 'is-invalid' : ''}`} placeholder="Event capacity..."
-                value={event.capacity} onBlur={this.handleBlur} onChange={this.handleChange} />
-              <div className="invalid-feedback">{errors.capacity}</div>
-            </div>
-            
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-picture-o fa-fw"></i></span>
-              <input type="text" name="image" className={`form-control ${(touch.image && errors.image) ? 'is-invalid' : ''}`} placeholder="Event image..."
-                value={event.image} onBlur={this.handleBlur} onChange={this.handleChange} />
-              <div className="invalid-feedback">{errors.image}</div>
-            </div>
-
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-globe fa-fw"></i></span>
-              
-              <span className="input-group-text">Latitude</span>
-              <input name="latitude" type="number" className={`form-control ${(touch.latitude && errors.latitude) ? 'is-invalid' : ''}`} 
-                value={event.latitude} onBlur={this.handleBlur} onChange={this.handleChange}/>
-
-              <span className="input-group-text">Longitude</span>
-              <input name="longitude" type="number" className={`form-control ${(touch.longitude && errors.longitude) ? 'is-invalid' : ''}`} 
-                value={event.longitude} onBlur={this.handleBlur} onChange={this.handleChange} />
-              
-              {touch.latitude && errors.latitude && <div className="invalid-feedback">{errors.latitude}</div>}
-              {touch.longitude && errors.longitude && <div className="invalid-feedback">{errors.longitude}</div>}
-            </div>
-
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-clock-o fa-fw"></i></span>
-              
-              <span className="input-group-text">Start</span>
-              <input type="datetime-local" name="start" className={`form-control ${(touch.start && errors.start) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
-                value={event.start} onBlur={this.handleBlur} onChange={this.handleChange} />
-
-              <span className="input-group-text">End</span>
-              <input name="end" type="datetime-local" className={`form-control ${(touch.end && errors.end) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
-                value={event.end} onBlur={this.handleBlur} onChange={this.handleChange} />
-              
-              {touch.start && errors.start && <div className="invalid-feedback">{errors.start}</div>}
-              {touch.end && errors.end && <div className="invalid-feedback">{errors.end}</div>}
-            </div>
-
-            <div className="input-group mb-2">
-              <span className="input-group-text"><i className="fa fa-tag fa-fw"></i></span>
-              <input type="text" name="tags" className={`form-control ${(touch.tags && errors.tags) ? 'is-invalid' : ''}`} placeholder="Coma separated event tags..."
-                value={event.tags} onBlur={this.handleBlur} onChange={this.handleChange} />
-              <div className="invalid-feedback">{errors.tags}</div>
-            </div>
-            
-            <button type="submit" className="btn btn-primary" disabled={!this.isValid()}>Create Event</button>
-          </form>
-        </div>
-      </div>
-
-    );
+  if (isCreated) {
+    return (<Redirect to="/" />)
   }
+
+  return (
+    <div className="row row-cols-1">
+      <div className="col text-center mb-2">
+        <img className="img-fluid img-thumbnail" src={event.image} alt={event.title} onError={(event) => event.target.src = 'https://via.placeholder.com/800x400'} />
+      </div>
+      <div className="col">
+        <form onSubmit={handleSubmit}>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-tag fa-fw"></i></span>
+            <input type="text" name="title" className={`form-control ${(touch.title && errors.title) ? 'is-invalid' : ''}`} placeholder="Event title..."
+              value={event.title} onBlur={handleBlur} onChange={handleChange} />
+            <div className="invalid-feedback">{errors.title}</div>
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-edit fa-fw"></i></span>
+            <textarea name="description" className={`form-control ${(touch.description && errors.description) ? 'is-invalid' : ''}`} placeholder="Event description..."
+              value={event.description} onBlur={handleBlur} onChange={handleChange}></textarea>
+            <div className="invalid-feedback">{errors.description}</div>
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-users fa-fw"></i></span>
+            <input type="number" name="capacity" className={`form-control ${(touch.capacity && errors.capacity) ? 'is-invalid' : ''}`} placeholder="Event capacity..."
+              value={event.capacity} onBlur={handleBlur} onChange={handleChange} />
+            <div className="invalid-feedback">{errors.capacity}</div>
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-picture-o fa-fw"></i></span>
+            <input type="text" name="image" className={`form-control ${(touch.image && errors.image) ? 'is-invalid' : ''}`} placeholder="Event image..."
+              value={event.image} onBlur={handleBlur} onChange={handleChange} />
+            <div className="invalid-feedback">{errors.image}</div>
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-globe fa-fw"></i></span>
+
+            <span className="input-group-text">Latitude</span>
+            <input name="latitude" type="number" className={`form-control ${(touch.latitude && errors.latitude) ? 'is-invalid' : ''}`}
+              value={event.latitude} onBlur={handleBlur} onChange={handleChange} />
+
+            <span className="input-group-text">Longitude</span>
+            <input name="longitude" type="number" className={`form-control ${(touch.longitude && errors.longitude) ? 'is-invalid' : ''}`}
+              value={event.longitude} onBlur={handleBlur} onChange={handleChange} />
+
+            {touch.latitude && errors.latitude && <div className="invalid-feedback">{errors.latitude}</div>}
+            {touch.longitude && errors.longitude && <div className="invalid-feedback">{errors.longitude}</div>}
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-clock-o fa-fw"></i></span>
+
+            <span className="input-group-text">Start</span>
+            <input type="datetime-local" name="start" className={`form-control ${(touch.start && errors.start) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
+              value={event.start} onBlur={handleBlur} onChange={handleChange} />
+
+            <span className="input-group-text">End</span>
+            <input name="end" type="datetime-local" className={`form-control ${(touch.end && errors.end) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
+              value={event.end} onBlur={handleBlur} onChange={handleChange} />
+
+            {touch.start && errors.start && <div className="invalid-feedback">{errors.start}</div>}
+            {touch.end && errors.end && <div className="invalid-feedback">{errors.end}</div>}
+          </div>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text"><i className="fa fa-tag fa-fw"></i></span>
+            <input type="text" name="tags" className={`form-control ${(touch.tags && errors.tags) ? 'is-invalid' : ''}`} placeholder="Coma separated event tags..."
+              value={event.tags} onBlur={handleBlur} onChange={handleChange} />
+            <div className="invalid-feedback">{errors.tags}</div>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={!isValid()}>Create Event</button>
+        </form>
+      </div>
+    </div>
+
+  );
 }
 
 export default EventForm;

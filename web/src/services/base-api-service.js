@@ -12,6 +12,7 @@ http.interceptors.response.use(function (response) {
   }, function (error) {
     // 401 from API means unauthorized! redirect to login page
     if (error?.response?.status === 401) {
+      localStorage.removeItem(currentUserStori)
       window.location.replace('/login')
     }
     // Any status codes that falls outside the range of 2xx cause this function to trigger

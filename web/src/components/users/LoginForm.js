@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useHistory } from "react-router";
+import { AuthContext } from "./../../contexts/AuthStore";
 import { login } from "../../services/users-service";
 
 function LoginForm() {
   const history = useHistory()
+  const { onUserChange } = useContext(AuthContext);
 
   const [state, setState] = useState({
     user: {
@@ -30,6 +32,7 @@ function LoginForm() {
 
     try {
       const user = await login(state.user.email, state.user.password);
+      onUserChange(user);
       history.replace('/')
     } catch (error) {
       const { message, errors } = error.response ? error.response.data : error;
