@@ -1,12 +1,12 @@
 import { Link, NavLink, useHistory } from 'react-router-dom';
-import { Fragment, useContext } from 'react';
-import { AuthContext } from '../../components/AuthStore';
+import { useContext, Fragment } from 'react';
+import { AuthContext } from '../../contexts/AuthStore';
 import logo from '../../images/logo-ih.svg';
-import { logout } from '../../services/users-service'
+import { logout } from '../../services/users-service';
 
 function Navbar() {
   const history = useHistory();
-  const { user, isAuthenticated  } = useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
 
   async function handleLogout() {
     await logout()
@@ -30,17 +30,18 @@ function Navbar() {
           <ul className="navbar-nav d-flex">
             {isAuthenticated() && (
               <Fragment>
-            <li className="nav-item"><Link className="nav-link text-light" to="/create-event"><i className="fa fa-plus" /></Link></li>
-            <li className="nav-item"><button type="submit" className="btn btn-link link-unstyled text-light" onClick={handleLogout}>Logout</button></li>
-            {/* <user.email> */}
-            </Fragment>
+                <li className="nav-item"><Link className="nav-link text-light" to="/create-event"><i className="fa fa-plus" /></Link></li>
+                <li className="nav-item"><Link className="nav-link text-light" to={`/user/${user.id}`}>{user.email}</Link></li>
+                <li className="nav-item"><button type="submit" className="btn btn-link link-unstyled text-light" onClick={handleLogout}>Logout</button></li>
+              </Fragment>
+            )}
+            {!isAuthenticated() && (
+              <Fragment>
+                <li className="nav-item"><NavLink className="nav-link" activeClassName="active" to="/login">Login</NavLink></li>
+                <li className="nav-item"><NavLink className="nav-link" activeClassName="active" to="/register">Register</NavLink></li>
+              </Fragment>
             )}
           </ul>
-          {!isAuthenticated() && (
-            <li className="nav-item"><NavLink className="nav-link" activeClassName="active" to="/login">Login</NavLink></li>
-            <li className="nav-item"><NavLink className="nav-link" activeClassName="active" to="/register">Register</NavLink></li>
-           
-            )}
         </div>
       </div>
     </nav>
