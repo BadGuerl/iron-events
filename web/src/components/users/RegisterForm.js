@@ -88,10 +88,11 @@ function RegisterForm() {
     e.preventDefault();
     if (isValid()) {
       try {
-        const user = await register(state.user);
+        await register(state.user);
         history.push('/login');
       } catch (error) {
         const { message, errors } = error && error.response ? error.response.data : error;
+        console.error(message);
         console.error(error.response.data);
         setState(state => ({
           ...state,
