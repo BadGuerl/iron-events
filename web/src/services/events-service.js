@@ -3,11 +3,11 @@ import http from './base-api-service';
 const list = () => http.get('/events')
 
 const get = (id) => http.get(`/events/${id}`)
-  .then(event => {
-    return new Promise(resolve => {
-      setTimeout(() => resolve(event), 5000)
-    })
-  })
+  // .then(event => {   esta promesa hace que no se ejecute el get events hasta dentro de 5 segundos
+  //   return new Promise(resolve => {
+  //     setTimeout(() => resolve(event), 5000)
+  //   })
+  // })
 
 const create = (event) => http.post(`/events`, event)
 

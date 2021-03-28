@@ -9,12 +9,14 @@ module.exports.list = (req, res, next) => {
   }
 
   Event.find(criteria)
+    .populate('owner', '_id name email')
     .then(events => res.json(events))
     .catch(next)
 }
 
 module.exports.get = (req, res, next) => {
   Event.findById(req.params.id)
+    .populate('owner', '_id name email') // id no es necesario traerlo
     .then(event => {
       if (event) res.json(event)
       else next(createError(404, 'Event not found'))
@@ -28,6 +30,7 @@ module.exports.create = (req, res, next) => {
     type: 'Point',
     coordinates: location
   }
+  req.body.owner = req.user.id;
 
   Event.create(req.body)
     .then(event => res.status(201).json(event))
@@ -41,6 +44,7 @@ module.exports.create = (req, res, next) => {
 }
 
 module.exports.delete = (req, res, next) => {
+  // Event.findById(req.params. id)
   Event.findByIdAndDelete(req.params.id)
     .then(event => {
       if (event) res.status(204).json({})

@@ -12,17 +12,17 @@ function EventDetail() {
 
   useEffect(() => {
     // componentDidMount
-    async function fetchEvent() {
+    async function fetchEvent() { // traer los eventos (fetchevent)
       try {
-        const { id } = params;
+        const { id } = params; //  nos traemos el identificador del evento, con el params
         console.info(`Fetching event ${id}...`);
-        const event = await eventsService.get(id);
-        if (!isUnmounted) {
+        const event = await eventsService.get(id); // aqui se hace el await de un evento
+        if (!isUnmounted) {  //solo en caso de que este desmontado el componente seguira la siguiente logica
           setEvent(event);
         }
       } catch(error) {
-        if (!isUnmounted) {
-          if (error?.response?.status === 404) {
+        if (!isUnmounted) {  //solo en caso de que este desmontado el componente seguira la siguiente logica
+          if (error?.response?.status === 404) { // if (error && error.response && error.response.status === 400)
             history.push('/events');
           } else {
             console.error(error);
@@ -31,15 +31,15 @@ function EventDetail() {
       }
     }
 
-    let isUnmounted = false;
-    fetchEvent();
+    let isUnmounted = false; // si el componente ya esta montado, esto da false y no se monta el componente
+    fetchEvent(); // ejecuta la funcion fetchevent
 
     return () => {
       // componentWillUnmount
-      isUnmounted = true;
+      isUnmounted = true;  // solo se ejecuta en caso de que se desmonte el componente
     }
-  }, [history, params]);
-
+  }, [history, params]); // array super importante, para que no se setee continuamente
+                         // en el array se dice que solo se setee cuando cambie algo en history o params
   if (!event) {
     return null;
   } else {
