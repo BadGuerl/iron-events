@@ -1,6 +1,6 @@
 import http from './base-api-service';
 
-const list = () => http.get('/events')
+const list = (search) => http.get('/events', { params: { search } })
 
 const get = (id) => http.get(`/events/${id}`)
   // .then(event => {   esta promesa hace que no se ejecute el get events hasta dentro de 5 segundos
@@ -13,7 +13,7 @@ const create = (event) => http.post(`/events`, event)
 
 const remove = (id) => http.delete(`/events/${id}`)
 
-const update = (event) => http.put(`/events`, event)
+const update = (event) => http.put(`/events/${event.id}`, event)
 
 const service = {
   create,

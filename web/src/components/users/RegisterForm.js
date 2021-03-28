@@ -87,12 +87,12 @@ function RegisterForm() {
     e.preventDefault();
     if (isValid()) {
       try {
-        await register(state.user);
-        history.push('/login');
+        const { user } = state;
+        await register(user);
+        history.push('/login', { email: user.email });
       } catch (error) {
         const { message, errors } = error && error.response ? error.response.data : error;
         console.error(message);
-        console.error(error.response.data);
         setState(state => ({
           ...state,
           errors: errors
@@ -130,7 +130,7 @@ function RegisterForm() {
       <div className="d-grid gap-2">
         <button className="btn btn-primary" type="submit" disabled={!isValid()}>Register</button>
       </div>
-      
+
     </form>
   );
 }

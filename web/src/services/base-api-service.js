@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 export const currentUserStoreKey = 'currentUser';
+=======
+export const currentUserStorageKey = 'current-user';
+>>>>>>> 0558830182c8d49ddb364df98a938a7fc29d74c0
 
 const http = axios.create({
   withCredentials: true,
@@ -8,6 +12,7 @@ const http = axios.create({
 })
 
 http.interceptors.response.use(function (response) {
+<<<<<<< HEAD
     // Any status code that lie within the range of 2xx cause this function to trigger
     // Do something with response data
     return response.data;
@@ -15,11 +20,33 @@ http.interceptors.response.use(function (response) {
     // 401 from API means unauthorized! redirect to login page
     if (error?.response?.status === 401) {
       localStorage.removeItem(currentUserStoreKey);
+=======
+  // Any status code that lie within the range of 2xx cause this function to trigger
+  // Do something with response data
+  return response.data;
+}, function (error) {
+  const status = error?.response?.status;
+  switch (status) {
+    case 401:
+      // 401 from API means unauthorized! redirect to login page
+      localStorage.removeItem(currentUserStorageKey);
+>>>>>>> 0558830182c8d49ddb364df98a938a7fc29d74c0
       window.location.replace('/login')
-    }
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    // Do something with response error
-    return Promise.reject(error);
-  });
+      break;
+    case 404:
+      // 404 resource not found
+      window.location.replace('/404')
+      break;
+    case 403:
+      // 403 forbidden!!
+      window.location.replace('/403')
+      break;
+    default:
+      break;
+  }
+  // Any status codes that falls outside the range of 2xx cause this function to trigger
+  // Do something with response error
+  return Promise.reject(error);
+});
 
 export default http;

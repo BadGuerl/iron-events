@@ -35,8 +35,11 @@ app.use((error, req, res, next) => {
   if (error instanceof mongoose.Error.ValidationError) error = createError(400, error)
   else if (error instanceof mongoose.Error.CastError) error = createError(404, 'Resource not found')
   else if (error.message.includes('E11000')) error = createError(400, 'Already exists')
+  else if (!error.status) error = createError(500, error)
 
-  console.log(error);
+  if (error.status >= 500) {
+    console.error(error);
+  }
 
   const data = {}
   data.message = error.message;
@@ -45,7 +48,7 @@ app.use((error, req, res, next) => {
       .reduce((errors, key) => ({ ...errors, [key]: error.errors[key]?.message || error.errors[key] }), {}) :
     undefined;
 
-  res.status(error.status || 500).json(data)
+  res.status(error.status).json(data)
 });
 
 

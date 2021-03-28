@@ -1,36 +1,28 @@
 import { createContext, useState, useCallback } from 'react';
-import { currentUserStoreKey } from '../services/base-api-service';
+
+import { currentUserStorageKey } from '../services/base-api-service';
 
 const AuthContext = createContext();
 
 function AuthStore({ children }) {
 
-  const [user, setUser] = useState(localStorage.getItem(currentUserStoreKey) ? 
-    JSON.parse(localStorage.getItem(currentUserStoreKey)) : undefined
-  );
+  const [user, setUser] = useState(localStorage.getItem(currentUserStorageKey) ? JSON.parse(localStorage.getItem(currentUserStorageKey)) : undefined);
 
   const handleUserChange = useCallback((user) => {
-    if (!user) {
-      localStorage.removeItem(currentUserStoreKey);
-    } else {
-      localStorage.setItem(currentUserStoreKey, JSON.stringify(user));
-    }
-    setUser(user)
+    if (user) localStorage.setItem(currentUserStorageKey, JSON.stringify(user));
+    else localStorage.removeItem(currentUserStorageKey);
+    setUser(user);
   }, []);
 
   const isAuthenticated = useCallback(() => {
-    return user?.email !== undefined;
-  }, [user]);
+    return user && user.email;
+  }, [user])
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      onUserChange: handleUserChange,
-      isAuthenticated
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, onUserChange: handleUserChange }} >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export { AuthStore as default, AuthContext };

@@ -3,9 +3,13 @@ const Event = require('../models/event.model');
 
 module.exports.list = (req, res, next) => {
   const criteria = {}
+  const { tags, search } = req.query;
 
-  if (req.query.tag) {
-    criteria.tags = req.query.tag
+  if (tags) {
+    criteria.tags = tags
+  }
+  if (search) {
+    criteria.title = new RegExp(search, 'i');
   }
 
   Event.find(criteria)
@@ -31,7 +35,6 @@ module.exports.create = (req, res, next) => {
     coordinates: location
   }
   req.body.owner = req.user.id;
-
   Event.create(req.body)
     .then(event => res.status(201).json(event))
     .catch(error => {
@@ -47,10 +50,10 @@ module.exports.delete = (req, res, next) => {
   // Event.findById(req.params. id)
   Event.findByIdAndDelete(req.params.id)
     .then(event => {
-      if (event) res.status(204).json({})
-      else next(createError(404, 'Event not found'))
-    })
-    .catch(next)
+      if (!event) next(createError(404, 'Event not found'))
+      else if (event.owner != req.user.id) next(createError(403, 'Only the owner of the event can perform this action'))
+      else return event.delete();
+    }).catch(next)
 }
 
 module.exports.update = (req, res, next) => {
@@ -61,11 +64,20 @@ module.exports.update = (req, res, next) => {
       coordinates: location
     }
   }
+  // Remove attributes than cant be modified
+  delete req.body.owner;
+  delete req.body.id;
+  delete req.body.createdAt;
+  delete req.body.updatedAt;
   
-  Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+  Event.findById(req.params.id)
     .then(event => {
-      if (event) res.json(event)
-      else next(createError(404, 'Event not found'))
-    })
-    .catch(next)
+      if (!event) next(createError(404, 'Event not found'))
+      else if (event.owner != req.user.id) next(createError(403, 'Only the owner of the event can perform this action'))
+      else {
+        Object.assign(event, req.body)
+        return event.save()
+          .then(event => res.json(event))
+      }
+    }).catch(next)
 }

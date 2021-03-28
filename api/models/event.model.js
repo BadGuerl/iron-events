@@ -1,4 +1,5 @@
 const moment = require('moment');
+const User = require('./user.model');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const User = require('./user.model');
@@ -76,7 +77,7 @@ const eventSchema = new Schema({
   owner: {
     ref: User.modelName,
     type: mongoose.Types.ObjectId,
-    required: 'Owner is required'
+    require: 'Owner is required'
   }
 }, {
   timestamps: true,
