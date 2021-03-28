@@ -73,7 +73,7 @@ const eventSchema = new Schema({
     }
   },
   tags: [String],
-  owner: {
+  owner: {  // añadimos el owner para que los eventos siempre tengan dueño
     ref: User.modelName,
     type: mongoose.Types.ObjectId,
     required: 'Owner is required'

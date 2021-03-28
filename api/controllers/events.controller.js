@@ -30,7 +30,7 @@ module.exports.create = (req, res, next) => {
     type: 'Point',
     coordinates: location
   }
-  req.body.owner = req.user.id;
+  req.body.owner = req.user.id; // este es el usuario que esta logueado en este momento
 
   Event.create(req.body)
     .then(event => res.status(201).json(event))
