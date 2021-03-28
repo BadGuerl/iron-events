@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Redirect } from 'react-router';
+import { useHistory } from 'react-router';
 import eventsService from '../../services/events-service';
 
 const validations = {
@@ -71,39 +71,40 @@ const validations = {
   },
 }
 
-function EventForm() {
-  const [state, setState] = useState(
-    {
-      event: {
-        title: '',
-        description: '',
-        image: '',
-        capacity: '',
-        start: '',
-        end: '',
-        latitude: '',
-        longitude: '',
-        tags: ''
-      },
-      errors: {
-        title: validations.title(),
-        description: validations.description(),
-        image: validations.image(),
-        capacity: validations.capacity(),
-        start: validations.start(),
-        end: validations.end(),
-        latitude: validations.latitude(),
-        longitude: validations.longitude()
-      },
-      touch: {},
-      isCreated: false
-    }
-  )
+function EventForm({ event: eventToEdit = {} }) {
+
+  const history = useHistory();
+  const [state, setState] = useState({
+    event: {
+      title: '',
+      description: '',
+      image: '',
+      capacity: '',
+      start: '',
+      end: '',
+      latitude: '',
+      longitude: '',
+      tags: '',
+      ...eventToEdit
+    },
+    errors: {
+      title: validations.title(eventToEdit.title),
+      description: validations.description(eventToEdit.description),
+      image: validations.image(eventToEdit.image),
+      capacity: validations.capacity(eventToEdit.capacity),
+      start: validations.start(eventToEdit.start),
+      end: validations.end(eventToEdit.end),
+      latitude: validations.latitude(eventToEdit.latitude),
+      longitude: validations.longitude(eventToEdit.longitude)
+    },
+    touch: {}
+  });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setState((state, props) => {
+    setState(state => {
       return {
+        ...state,
         event: {
           ...state.event,
           [name]: value,
@@ -118,7 +119,8 @@ function EventForm() {
 
   const handleBlur = (event) => {
     const { name } = event.target;
-    setState((state, props) => ({
+    setState(state => ({
+      ...state,
       touch: {
         ...state.touch,
         [name]: true
@@ -126,37 +128,37 @@ function EventForm() {
     }));
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (isValid()) {
+      try {
+        const eventData = state.event;
+        eventData.location = [eventData.longitude, eventData.latitude];
+        eventData.tags = eventData.tags.split(',').map(tag => tag.trim()) || [];
+        const event = eventData.id ? await eventsService.update(eventData) : await eventsService.create(eventData);
+        history.push(`/events/${event.id}`);
+      } catch(error) {
+        const { message, errors } = error.response?.data || error;
 
-      const eventCreationData = state.event;
-      eventCreationData.location = [eventCreationData.longitude, eventCreationData.latitude];
-      eventCreationData.tags = eventCreationData?.tags.split(',').map(tag => tag.trim()) || [];
+        if (errors?.location) {
+          errors.latitude = errors.location;
+          errors.longitude = errors.location;
+          delete errors.location;
+        }
 
-      eventsService.create(eventCreationData)
-        .then(event => setState({ isCreated: true }))
-        .catch(error => {
-          const { message, errors } = error.response?.data || { message: error.message };
-
-          if (errors?.location) {
-            errors.latitude = errors.location;
-            errors.longitude = errors.location;
-            delete errors.location;
+        setState(state => ({
+          ...state,
+          errors: {
+            ...errors,
+            title: !errors && message
+          },
+          touch: {
+            ...errors,
+            title: !errors && message
           }
-
-          setState({
-            errors: {
-              ...errors,
-              title: !errors && message
-            },
-            touch: {
-              ...errors,
-              title: !errors && message
-            }
-          })
-        })
+        }));
+      }
     }
   }
 
@@ -164,11 +166,8 @@ function EventForm() {
     const { errors } = state;
     return !Object.keys(errors).some(error => errors[error]);
   }
-  const { event, errors, touch, isCreated } = state;
 
-  if (isCreated) {
-    return (<Redirect to="/" />)
-  }
+  const { event, errors, touch } = state;
 
   return (
     <div className="row row-cols-1">
@@ -177,28 +176,28 @@ function EventForm() {
       </div>
       <div className="col">
         <form onSubmit={handleSubmit}>
-
+          
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-tag fa-fw"></i></span>
             <input type="text" name="title" className={`form-control ${(touch.title && errors.title) ? 'is-invalid' : ''}`} placeholder="Event title..."
               value={event.title} onBlur={handleBlur} onChange={handleChange} />
             <div className="invalid-feedback">{errors.title}</div>
           </div>
-
+          
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-edit fa-fw"></i></span>
             <textarea name="description" className={`form-control ${(touch.description && errors.description) ? 'is-invalid' : ''}`} placeholder="Event description..."
               value={event.description} onBlur={handleBlur} onChange={handleChange}></textarea>
             <div className="invalid-feedback">{errors.description}</div>
           </div>
-
+          
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-users fa-fw"></i></span>
             <input type="number" name="capacity" className={`form-control ${(touch.capacity && errors.capacity) ? 'is-invalid' : ''}`} placeholder="Event capacity..."
               value={event.capacity} onBlur={handleBlur} onChange={handleChange} />
             <div className="invalid-feedback">{errors.capacity}</div>
           </div>
-
+          
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-picture-o fa-fw"></i></span>
             <input type="text" name="image" className={`form-control ${(touch.image && errors.image) ? 'is-invalid' : ''}`} placeholder="Event image..."
@@ -208,22 +207,22 @@ function EventForm() {
 
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-globe fa-fw"></i></span>
-
+            
             <span className="input-group-text">Latitude</span>
-            <input name="latitude" type="number" className={`form-control ${(touch.latitude && errors.latitude) ? 'is-invalid' : ''}`}
-              value={event.latitude} onBlur={handleBlur} onChange={handleChange} />
+            <input name="latitude" type="number" className={`form-control ${(touch.latitude && errors.latitude) ? 'is-invalid' : ''}`} 
+              value={event.latitude} onBlur={handleBlur} onChange={handleChange}/>
 
             <span className="input-group-text">Longitude</span>
-            <input name="longitude" type="number" className={`form-control ${(touch.longitude && errors.longitude) ? 'is-invalid' : ''}`}
+            <input name="longitude" type="number" className={`form-control ${(touch.longitude && errors.longitude) ? 'is-invalid' : ''}`} 
               value={event.longitude} onBlur={handleBlur} onChange={handleChange} />
-
+            
             {touch.latitude && errors.latitude && <div className="invalid-feedback">{errors.latitude}</div>}
             {touch.longitude && errors.longitude && <div className="invalid-feedback">{errors.longitude}</div>}
           </div>
 
           <div className="input-group mb-2">
             <span className="input-group-text"><i className="fa fa-clock-o fa-fw"></i></span>
-
+            
             <span className="input-group-text">Start</span>
             <input type="datetime-local" name="start" className={`form-control ${(touch.start && errors.start) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
               value={event.start} onBlur={handleBlur} onChange={handleChange} />
@@ -231,7 +230,7 @@ function EventForm() {
             <span className="input-group-text">End</span>
             <input name="end" type="datetime-local" className={`form-control ${(touch.end && errors.end) ? 'is-invalid' : ''}`} placeholder="dd/mm/yyyy hh:mm"
               value={event.end} onBlur={handleBlur} onChange={handleChange} />
-
+            
             {touch.start && errors.start && <div className="invalid-feedback">{errors.start}</div>}
             {touch.end && errors.end && <div className="invalid-feedback">{errors.end}</div>}
           </div>
@@ -242,8 +241,13 @@ function EventForm() {
               value={event.tags} onBlur={handleBlur} onChange={handleChange} />
             <div className="invalid-feedback">{errors.tags}</div>
           </div>
-
-          <button type="submit" className="btn btn-primary" disabled={!isValid()}>Create Event</button>
+          
+          <div className="d-grid">
+            <button type="submit" className="btn btn-primary" disabled={!isValid()}>
+              {event.id && <span>Update Event</span>}
+              {!event.id && <span>Create Event</span>}
+            </button>
+          </div>
         </form>
       </div>
     </div>

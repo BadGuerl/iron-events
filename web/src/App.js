@@ -7,6 +7,8 @@ import EventDetail from './components/events/EventDetail';
 import Login from './screens/Login';
 import Register from './screens/Register';
 import AuthStore from './contexts/AuthStore';
+import PrivateRoute from './guards/PrivateRoute';
+import Error from './screens/Error';
 
 function App() {
   return (
@@ -17,9 +19,13 @@ function App() {
           <Switch>
             <Route exact path="/login" component={Login} />
             <Route exact path="/register" component={Register} />
-            <Route exact path="/events" component={Events} />
-            <Route exact path="/create-event" component={EventForm} />
-            <Route exact path="/events/:id" component={EventDetail} />
+            <PrivateRoute exact path="/events" component={Events} />
+            <PrivateRoute exact path="/create-event" component={EventForm} />
+            <PrivateRoute exact path="/events/:id" component={EventDetail} />
+
+            <Route exact path="/404" component={() => <Error code={404} />} />
+            <Route exact path="/403" component={() => <Error code={403} />} />
+
             <Redirect to="/events" />
           </Switch>
         </div>

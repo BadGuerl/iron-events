@@ -1,11 +1,13 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, useContext } from 'react';
 import { Link, useHistory, useParams } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthStore';
 import moment from 'moment';
 
 import eventsService from '../../services/events-service';
 
 function EventDetail() {
 
+  const { user } = useContext(AuthContext);
   const history = useHistory();
   const params = useParams();
   const [event, setEvent] = useState();
@@ -40,11 +42,16 @@ function EventDetail() {
     }
   }, [history, params]); // array super importante, para que no se setee continuamente
                          // en el array se dice que solo se setee cuando cambie algo en history o params
+  const handleDeleteEvent = async () => {
+    await eventsService.remove(event.id);
+    history.push('/events');
+  }
+
   if (!event) {
     return null;
   } else {
 
-    const { image, title, description, tags, capacity, start, end } = event;
+    const { image, title, description, tags, capacity, start, end, owner } = event;
 
     return (
       <Fragment>
@@ -66,6 +73,17 @@ function EventDetail() {
             </div>
           )}
         </div>
+        {user?.id === owner.id && (
+          <div className="row text-center">
+            <div className="alert alert-secondary">
+              <h3>Admin zone</h3>
+              <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <Link className="btn btn-secondary" to={`/events/${event.id}/edit`}>Update</Link>
+                <button type="button" className="btn btn-danger" onClick={handleDeleteEvent}>Delete Event</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="row">
           <div className="col">
             <Link to="/events" className="fw-lighter"><i className="fa fa-angle-left"></i> Back to Events</Link>

@@ -9,7 +9,7 @@ module.exports.list = (req, res, next) => {
   }
 
   Event.find(criteria)
-    .populate('owner', '_id name email')
+    .populate('owner', '_id name')
     .then(events => res.json(events))
     .catch(next)
 }
@@ -44,11 +44,12 @@ module.exports.create = (req, res, next) => {
 }
 
 module.exports.delete = (req, res, next) => {
-  // Event.findById(req.params. id)
-  Event.findByIdAndDelete(req.params.id)
+  Event.findById(req.params.id)
     .then(event => {
-      if (event) res.status(204).json({})
-      else next(createError(404, 'Event not found'))
+      if (!event) next(createError(404, 'Event not found'))
+      else if (event.owner != req.user.id/* && req.user.role !== 'admin'*/) next(createError(403, 'Not allowed')) // el admin puede borrar
+      else return event.delete()
+        .then(() => res.status(204).json({}))
     })
     .catch(next)
 }
@@ -61,11 +62,17 @@ module.exports.update = (req, res, next) => {
       coordinates: location
     }
   }
+  delete req.body.owner;
   
-  Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-    .then(event => {
-      if (event) res.json(event)
-      else next(createError(404, 'Event not found'))
-    })
-    .catch(next)
+  Event.findById(req.params.id)
+  .then(event => {
+    if (!event) next(createError(404, 'Event not found'))
+    else if (event.owner != req.user.id/* && req.user.role !== 'admin'*/) next(createError(403, 'Not allowed')) // el admin puede actualizar
+    else {
+      Object.assign(event, req.body)  // aqui le pasas todas las propiedades que han cambiado
+      return event.save()  // aqui se guardan
+      .then(event => res.json(event))
+    }
+  })
+  .catch(next);
 }
